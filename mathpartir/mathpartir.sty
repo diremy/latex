@@ -29,7 +29,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{mathpartir}
-    [2021/09/05 version 1.5.1 Math Paragraph for Typesetting Inference Rules]
+    [2023/09/05 version 1.5.2 Math Paragraph for Typesetting Inference Rules]
 
 %% Identification
 %% Preliminary declarations
@@ -338,6 +338,12 @@
 \def \mpr@item #1{$\displaystyle #1$}
 \def \mpr@sep{2em}
 \def \mpr@blank { }
+
+
+%% Splits the list of formulas #2 into a stack of lines in mode #1
+\def \mpr@hovboxT {\mpr@hovbox{\@premissetrue}}
+\def \mpr@hovboxB {\mpr@hovbox{\@premissefalse}}
+
 \def \mpr@hovbox #1#2{\hbox
   \bgroup
   \ifx #1T\@premissetrue
@@ -396,6 +402,13 @@
 %% BEGIN PATCH
 %% Alternate solution for \mpr@hovboxT
 %% So as to compute premises in order
+
+%% Do not change this
+\def \mpr@empty {}
+\def \mpr@ifempty #1{%
+  \def \@test{#1}\ifx\@test \mpr@empty \let \@do \@firstoftwo
+  \else \let \@do \@secondoftwo \fi \@do}
+
 
 %% Typesetting a rule item into a box
 \def \mpr@ibox #1{\hbox {\strut \mpr@item {#1}}}
@@ -477,9 +490,12 @@
   \unvbox\mpr@vlist
   }}}
 
-%% You may comment out this line to recover the old version
-%% that does note evaluate items in order
 \let \mpr@hovboxT \mpr@hovboxes
+
+%% You may recover the old behavior by calling
+%% \MprRecoverOlderVersion
+\def \MprRecoverOlderVersion
+   {\def \mpr@hovboxT {\mpr@hovbox{\@premissetrue}}}
 %% END PATCH
 %%%%%%%%%%%%%%%%
 
@@ -536,38 +552,32 @@
     {$\lower 0.01pt \mpr@@fraction {#2}{#3}\mkern -8mu#1$}}
 \def \mpr@infercenter #1{\vcenter {\mpr@hovbox{T}{#1}}}
 
-\def \mpr@empty {}
-\def \mpr@inferrule
-  {\bgroup
-     \ifnum \linewidth<\hsize \hsize \linewidth\fi
-     \mpr@rulelineskip
+
+\def \mpr@infer@bindings{%
      \let \and \qquad
      \let \hva \mpr@hva
      \let \@rulename \mpr@empty
      \let \@rule@options \mpr@empty
      \let \mpr@over \@@over
-     \mpr@inferrule@}
-\newcommand {\mpr@inferrule@}[3][]
-  {\everymath={\displaystyle}%
-   \def \@test {#2}\ifx \empty \@test
-      \def \@test {#3}\ifx \empty \@test
-        \PackageWarning {mathpartir}
-          {\string\inferrule\space empty arguments substituted}{}%
-        \setbox0 \mpr@fraction {?}{?}%
-      \else
-        \setbox0 \hbox {$\vcenter {\mpr@hovbox{B}{#3}}$}%
-      \fi
-   \else
-   \def \@test {#3}\ifx \empty \@test
-      \setbox0 \hbox {$\vcenter {\mpr@hovbox{T}{#2}}$}%
-   \else
-   \setbox0 \mpr@fraction {\mpr@hovbox{T}{#2}}{\mpr@hovbox{B}{#3}}%
-   \fi \fi
-   \def \@test {#1}\ifx \@test\empty \box0
-   \else \vbox
-%%% Suggestion de Francois pour les etiquettes longues
-%%%   {\hbox to \wd0 {\RefTirName {#1}\hfil}\box0}\fi
-      {\hbox {\DefTirName {#1}}\box0}\fi
+}
+\newcommand {\mpr@inferrule}[3][]
+  {\bgroup
+     \ifnum \linewidth<\hsize \hsize \linewidth\fi
+     \mpr@rulelineskip
+     \mpr@infer@bindings
+     \everymath={\displaystyle}%
+     \mpr@ifempty {#2}
+        {\mpr@ifempty {#3}
+          {\PackageWarning {mathpartir}
+            {\string\inferrule\space empty arguments substituted}{}%
+           \setbox0 \mpr@fraction {?}{?}}
+          {\setbox0 \hbox {$\vcenter {\mpr@hovbox{B}{#3}}$}}}%
+        {\mpr@ifempty {#3}
+          {\setbox0 \hbox {$\vcenter {\mpr@hovbox{T}{#2}}$}}%
+          {\setbox0 \mpr@fraction {\mpr@hovbox{T}{#2}}{\mpr@hovbox{B}{#3}}}}%
+     \mpr@ifempty {#1}
+        {\box0}
+        {\vbox {\hbox {\DefTirName {#1}}\box0}}%
    \egroup}
 
 \def \mpr@vdotfil #1{\vbox to #1{\leaders \hbox{$\cdot$} \vfil}}
@@ -655,19 +665,29 @@
    \setbox \mpr@right \hbox {\unhbox \mpr@right \unhbox0}}
 \define@key {mpr}{Right}
   {\setbox \mpr@right \hbox {\unhbox \mpr@right \rlap {$\;\RightTirName {#1}$}}}
-\define@key {mpr}{vdots}{\def \mpr@vdots {\@@atop \mpr@vdotfil{#1}}}
+\define@key {mpr}{vdots}
+  {\def \mpr@vdots {\mpr@vdotfil{#1}}}
+  %% {\def \mpr@vdots {\@@atop \mpr@vdotfil{#1}}}
 \define@key {mpr}{after}{\edef \mpr@after {\mpr@after #1}}
 \define@key {mpr}{vcenter}[]{\mpr@vcentertrue}
 
 \newif \ifmpr@vcenter \mpr@vcenterfalse
 \newcommand \mpr@inferstar@ [3][]{\begingroup
   \setbox0 \hbox
-        {\let \mpr@rulename \mpr@empty \let \mpr@vdots \relax
-         \setbox \mpr@right \hbox{}%
+        {\let \mpr@rulename \mpr@empty
+         \let \mpr@vdots \mpr@empty
+         \setbox \mpr@right \box\voidb@x%\hbox{}%
          \setkeys{mpr}{#1}%
-         $\ifx \mpr@rulename \mpr@empty \mpr@inferrule {#2}{#3}\else
-          \mpr@inferrule [{\mpr@rulename}]{#2}{#3}\fi
-          \box \mpr@right \mpr@vdots$%
+         $\ifx \mpr@rulename \mpr@empty
+          \ifx \mpr@vdots \mpr@empty
+            \mpr@inferrule {#2}{#3}\else
+            \mpr@inferrule {#2}{#3\\\\\mpr@vdots}\fi%
+          \else
+          \ifx \mpr@vdots \mpr@empty
+            \mpr@inferrule [{\mpr@rulename}]{#2}{#3!}\else
+            \mpr@inferrule [{\mpr@rulename}]{#2}{#3?\\\\\mpr@empty}\fi%
+          \fi
+          \box \mpr@right$%
           \ifmpr@vcenter \aftergroup \mpr@vcentertrue \fi}
   \ifmpr@vcenter
      \box0

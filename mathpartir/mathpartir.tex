@@ -196,7 +196,7 @@ like that:
 $$
 \ifhevea \one
 \else
-\fbox {\hsize 0.33 \hsize \vbox {$$\one$$}}
+\fbox {\hsize 0.33\hsize \vbox {$$\one$$}}
 \fi
 $$
 An inference rule is mainly composed of a premise and a conclusion. 
@@ -577,7 +577,7 @@ $$
 \inferrule* [left=Total,rightstyle=\em,right={(when $n > 0$)}]
   {\inferrule* [Left=Foo]
      {\inferrule* [rightstyle={\bf},Right=Bar,vskip=1ex,
-                   leftskip=2em,rightskip=2em,vdots=1.5em]
+                   leftskip=2em,vdots=1.5em,rightskip=2em]
          {a \\ a \\\\ bb \\ cc \\ dd}
          {ee}
        \\ ff \\ gg}
@@ -588,10 +588,12 @@ $$
 $$
 and its code
 \begin{lstlisting}{Ocaml}
-\inferrule* [left=Total,rightstyle=\em,right={(when $n > 0$)}]
+\inferrule*
+  [left=Total,rightstyle=\em,right={(when $n > 0$)}]
   {\inferrule* [Left=Foo]
-     {\inferrule* [Right=Bar,rightstyle=\bf,
-                       leftskip=2em,rightskip=2em,vdots=1.5em]
+     {\inferrule*
+        [Right=Bar,rightstyle=\bf,
+         leftskip=2em,rightskip=vdots=1.5em]
          {a \\ a \\\\ bb \\ cc \\ dd}
          {ee}
        \\ ff \\ gg}
@@ -670,7 +672,7 @@ Another difference is that the optional argument of the plain version is a
 label to always be placed on top of the rule, while the $\ast$-version takes
 a record of arguments.  Hence, it can be parameterized in many more ways.
 
-One may recover the plain version from the start version by passing the
+One may recover the plain version from the star version by passing the
 extra argument \texttt{vcenter} as illustrated below (the base line is
 aligned with the dotted line):
 \begin{mathpar}
@@ -774,9 +776,12 @@ done). When moved to the vertical list, lines are aligned on their center
 (as if their left-part was a left overlapped). At the end the vbox is
 readjusted on the right. 
 
-This description works for conclusions. For premises, the elements must be
-processes in reverse order and the vertical list is simply built upside
-down. 
+This description works for conclusions.  For premises, the elements used to
+be processes in reverse order and the vertical list is simply built upside
+down, which was annoying when using counters in the premises.  This has
+recently been fixed, with a quite different implementation.  In case of
+problem, the old behavoir can be recovered by calling
+\verb"\MprRecoverOlderVersion".
 
 \section {Other Options for the {\tt mathpar} environment}
 
