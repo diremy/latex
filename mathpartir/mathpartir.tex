@@ -781,7 +781,30 @@ be processes in reverse order and the vertical list is simply built upside
 down, which was annoying when using counters in the premises.  This has
 recently been fixed, with a quite different implementation.  In case of
 problem, the old behavoir can be recovered by calling
-\verb"\MprRecoverOlderVersion".
+\verb"\MprRecoverOlderVerPremise".
+
+For example,
+\begin{lstlisting}{Ocaml}
+\newcount \clab
+\newcommand {\lab}[1]
+  {\global\advance \clab by 1\relax (\the\clab)}
+\infer [New] {\lab A \\ \lab B} {\lab C \\ \lab D}
+\end{lstlisting}
+produces:
+\begin{mathpar}
+\newcount \clab
+\newcommand {\lab}[1]
+  {\global\advance \clab by 1\relax (\the\clab)}
+\newcommand {\foo}[1]{  
+\infer [#1 behavior]
+   {\lab A \\\\ \lab B \\ \lab C}
+   {\lab D\\ \lab E \\ \lab F}
+}
+\foo{New}
+
+\MprRecoverOlderVersion
+\clab0\foo{Old}
+\end{mathpar}
 
 \section {Other Options for the {\tt mathpar} environment}
 

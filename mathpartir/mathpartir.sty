@@ -346,13 +346,7 @@
 
 \def \mpr@hovbox #1#2{\hbox
   \bgroup
-  \ifx #1T\@premissetrue
-  \else \ifx #1B\@premissefalse
-  \else
-     \PackageError{mathpartir}
-       {Premisse orientation should either be T or B}
-       {Fatal error in Package}%
-  \fi \fi
+  #1\relax
   \def \@test {#2}\ifx \@test \mpr@blank\else
   \setbox \mpr@hlist \hbox {}%
   \setbox \mpr@vlist \vbox {}%
@@ -430,8 +424,6 @@
     {#1\let \bln@do \@firstoftwo \else \let \bln@do \@secondoftwo \fi
      \bln@do}
 
-\newbox \mpr@Hlist
-
 \def \mpr@move@htovlist{%
   %% Pop \mpr@hlist into \mpr@vlist
   %% Uses box0 and box1 as intermediate boxes
@@ -455,7 +447,6 @@
           \setbox \mpr@hlist \box0
           \mpr@tmpdim \wd\mpr@hlist
           }%
-         %
          %% Move box0 to hlist and adjust dim
          {\setbox \mpr@hlist
              \hbox {\box0 \hskip \mpr@sep \unhbox\mpr@hlist}}%
@@ -465,8 +456,6 @@
      \global \setbox0 \box\mpr@vlist
     }%
   \setbox\mpr@vlist\box0
-  \ifmpr@center
-    \setbox \mpr@vlist \vbox {\hskip \wd\mpr@vlist \box \mpr@vlist}\fi
   \texbool{\ifvoid\mpr@hlist}{\ERROR}{}%
   }}
 
@@ -477,18 +466,22 @@
      \setbox \mpr@hlist \hbox {\unhbox\mpr@hlist \box1}}%
   }
 
-\def \mpr@hovboxes #1{\hbox {\vbox {%
-  \@premissetrue
-  \let \\ \relax
-  \let \snoc \mpr@cons
-  \expandafter \mpr@makelist #1\mpr@to \@tmp
-  \setbox \mpr@hlist \box\voidb@x
-  \setbox \mpr@vlist \box\voidb@x
-  \let\\\mpr@next
-  \@tmp\relax
-  \mpr@move@htovlist
-  \unvbox\mpr@vlist
-  }}}
+\def \mpr@hovboxes #1{\hbox {%
+  \setbox \mpr@vlist \vbox {%
+    \@premissetrue
+    \let \\ \relax
+    \let \snoc \relax
+    \expandafter \mpr@makelist #1\mpr@to \@tmp
+    \setbox \mpr@hlist \box\voidb@x
+    \setbox \mpr@vlist \box\voidb@x
+    \let\\\mpr@next
+    \@tmp\relax
+    \mpr@move@htovlist
+    \hbox {\box\mpr@vlist}%
+  }%
+  \ifmpr@center \hskip \wd\mpr@vlist\fi
+  \box \mpr@vlist
+  }}
 
 \let \mpr@hovboxT \mpr@hovboxes
 
@@ -550,7 +543,7 @@
     {$\lower 0.01pt \mpr@@fraction {#1}{#2}\mkern -15mu\rightarrow$}}
 \def \mpr@@rewrite #1#2#3{\hbox
     {$\lower 0.01pt \mpr@@fraction {#2}{#3}\mkern -8mu#1$}}
-\def \mpr@infercenter #1{\vcenter {\mpr@hovbox{T}{#1}}}
+\def \mpr@infercenter #1{\vcenter {\mpr@hovboxT{#1}}}
 
 
 \def \mpr@infer@bindings{%
@@ -571,10 +564,10 @@
           {\PackageWarning {mathpartir}
             {\string\inferrule\space empty arguments substituted}{}%
            \setbox0 \mpr@fraction {?}{?}}
-          {\setbox0 \hbox {$\vcenter {\mpr@hovbox{B}{#3}}$}}}%
+          {\setbox0 \hbox {$\vcenter {\mpr@hovboxB{#3}}$}}}%
         {\mpr@ifempty {#3}
-          {\setbox0 \hbox {$\vcenter {\mpr@hovbox{T}{#2}}$}}%
-          {\setbox0 \mpr@fraction {\mpr@hovbox{T}{#2}}{\mpr@hovbox{B}{#3}}}}%
+          {\setbox0 \hbox {$\vcenter {\mpr@hovboxT{#2}}$}}%
+          {\setbox0 \mpr@fraction {\mpr@hovboxT{#2}}{\mpr@hovboxB{#3}}}}%
      \mpr@ifempty {#1}
         {\box0}
         {\vbox {\hbox {\DefTirName {#1}}\box0}}%
@@ -595,11 +588,11 @@
      \let \and \qquad
      \let \hva \mpr@hva
      \setbox0 \hbox {\begin{array}[b]{@{}c@{}}
-     \mpr@hovbox{T}{#2}\cr\triple@hline
-     \mpr@hovbox{T}{#3}\cr\triple@hline 
+     \mpr@hovboxT{#2}\cr\triple@hline
+     \mpr@hovboxT{#3}\cr\triple@hline 
      \let \mpr@vbox \vtop \ht0 0em
      \setbox0 \strut \@tempdima \ht0
-     \setbox0 \mpr@hovbox{B}{#4}\advance \@tempdima by -\ht0
+     \setbox0 \mpr@hovboxB{#4}\advance \@tempdima by -\ht0
      \setbox0 \hbox{\raise \@tempdima \box0}\box0
      \end{array}}%
    \def \@test {#1}\ifx \@test\empty \box0
