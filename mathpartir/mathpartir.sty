@@ -392,6 +392,97 @@
    \egroup
 }
 
+%%%%%%%%%%%%%%%%
+%% BEGIN PATCH
+%% Alternate solution for \mpr@hovboxT
+%% So as to compute premises in order
+
+%% Typesetting a rule item into a box
+\def \mpr@ibox #1{\hbox {\strut \mpr@item {#1}}}
+
+\newbox \mpr@tmpbox
+
+%% Moving hlist to vlist (unless hlist is void)
+%% does not set box0
+\def \mpr@hontovlist
+  {\ifvoid \mpr@hlist \else
+     \ifmpr@center
+        \setbox \mpr@hlist
+          \hbox {\hskip -0.5\wd\mpr@hlist \unhbox\mpr@hlist}\fi
+     \setbox \mpr@vlist \vbox {\box\mpr@hlist \unvbox\mpr@vlist}%
+     \texbool{\ifvoid\mpr@hlist}{}{\ERROR}%
+  \fi}
+
+\providecommand {\texbool}[1]
+    {#1\let \bln@do \@firstoftwo \else \let \bln@do \@secondoftwo \fi
+     \bln@do}
+
+\newbox \mpr@Hlist
+
+\def \mpr@move@htovlist{%
+  %% Pop \mpr@hlist into \mpr@vlist
+  %% Uses box0 and box1 as intermediate boxes
+  %% Usese box0 globally
+  %% Warning! global setting 
+  \texbool {\ifvoid \mpr@hlist}{\ERROR}{%
+  \setbox0 \box\mpr@hlist
+  \setbox \mpr@hlist \hbox
+    {\unhbox0
+     \setbox \mpr@hlist\lastbox
+     \mpr@tmpdim \wd\mpr@hlist
+     \loop
+       \setbox0 \lastbox
+       \texbool{\ifvoid0}{\iffalse}{%
+       \advance \mpr@tmpdim by \mpr@sep
+       \advance \mpr@tmpdim by \wd0\relax
+       \texbool{\ifdim \mpr@tmpdim > \hsize}
+         %% Move hlist onto vlist
+         {\mpr@hontovlist
+          %% Move box0 to hlist and adjust dim
+          \setbox \mpr@hlist \box0
+          \mpr@tmpdim \wd\mpr@hlist
+          }%
+         %
+         %% Move box0 to hlist and adjust dim
+         {\setbox \mpr@hlist
+             \hbox {\box0 \hskip \mpr@sep \unhbox\mpr@hlist}}%
+       \iftrue}%
+     \repeat
+     \ifvoid \mpr@hlist \else \mpr@hontovlist \fi
+     \global \setbox0 \box\mpr@vlist
+    }%
+  \setbox\mpr@vlist\box0
+  \ifmpr@center
+    \setbox \mpr@vlist \vbox {\hskip \wd\mpr@vlist \box \mpr@vlist}\fi
+  \texbool{\ifvoid\mpr@hlist}{\ERROR}{}%
+  }}
+
+\def \mpr@next #1{%
+  \mpr@ifempty{#1}
+    {\mpr@move@htovlist \unvbox\mpr@vlist}%
+    {\setbox1 \mpr@ibox {#1}%
+     \setbox \mpr@hlist \hbox {\unhbox\mpr@hlist \box1}}%
+  }
+
+\def \mpr@hovboxes #1{\hbox {\vbox {%
+  \@premissetrue
+  \let \\ \relax
+  \let \snoc \mpr@cons
+  \expandafter \mpr@makelist #1\mpr@to \@tmp
+  \setbox \mpr@hlist \box\voidb@x
+  \setbox \mpr@vlist \box\voidb@x
+  \let\\\mpr@next
+  \@tmp\relax
+  \mpr@move@htovlist
+  \unvbox\mpr@vlist
+  }}}
+
+%% You may comment out this line to recover the old version
+%% that does note evaluate items in order
+\let \mpr@hovboxT \mpr@hovboxes
+%% END PATCH
+%%%%%%%%%%%%%%%%
+
 %%% INFERENCE RULES
 
 \@ifundefined{@@over}{%
