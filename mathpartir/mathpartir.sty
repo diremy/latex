@@ -308,19 +308,20 @@
 
 %% Part III -- Type inference rules
 
-\newif \if@premisse
+\newif \ifmpr@premise
 \newbox \mpr@hlist
 \newbox \mpr@vlist
 \newif \ifmpr@center \mpr@centertrue
 \def \mpr@vskip {}
 \let \mpr@vbox \vbox
+
 \def \mpr@htovlist {%
    \setbox \mpr@hlist
       \hbox {\strut
              \ifmpr@center \hskip -0.5\wd\mpr@hlist\fi
              \unhbox \mpr@hlist}%
    \setbox \mpr@vlist
-      \mpr@vbox {\if@premisse
+      \mpr@vbox {\ifmpr@premise
                 \box \mpr@hlist
                 \ifx \mpr@vskip \empty \else
                   \hrule height 0em depth \mpr@vskip width 0em
@@ -339,22 +340,26 @@
 \def \mpr@sep{2em}
 \def \mpr@blank { }
 
+%% Splits the list of formulas #2 into a stack of lines
+%% Mode #1 gives sets mode @premisetrue or @premisefalse
+%% for typesetting premises or conclusions
 
-%% Splits the list of formulas #2 into a stack of lines in mode #1
-\def \mpr@hovboxT {\mpr@hovbox{\@premissetrue}}
-\def \mpr@hovboxB {\mpr@hovbox{\@premissefalse}}
+\def \mpr@hovboxT {\mpr@hovbox{\mpr@premisetrue}}
+\def \mpr@hovboxB {\mpr@hovbox{\mpr@premisefalse}}
 
-\def \mpr@hovbox #1#2{\hbox
+%% @hovbox will be bound to @hovbox@old or @hovbox@new
+
+\def \mpr@hovbox@old #1#2{\hbox
   \bgroup
   #1\relax
   \def \@test {#2}\ifx \@test \mpr@blank\else
   \setbox \mpr@hlist \hbox {}%
   \setbox \mpr@vlist \vbox {}%
-  \if@premisse \let \snoc \mpr@cons \else \let \snoc \mpr@snoc \fi
+  \ifmpr@premise \let \snoc \mpr@cons \else \let \snoc \mpr@snoc \fi
   \let \@hvlist \empty \let \@rev \empty
   \mpr@tmpdim 0em
   \expandafter \mpr@makelist #2\mpr@to \mpr@flat
-  \if@premisse \mpr@rev \mpr@flat \mpr@to \@rev \else \let \@rev \mpr@flat \fi
+  \ifmpr@premise \mpr@rev \mpr@flat \mpr@to \@rev \else \let \@rev \mpr@flat \fi
   \def \\##1{%
      \def \@test {##1}\ifx \@test \empty
         \mpr@htovlist
@@ -365,7 +370,7 @@
       %\mpr@tmpdim 1.02\mpr@tmpdim
       \ifnum \mpr@tmpdim < \hsize
          \ifnum \wd\mpr@hlist > 0
-           \if@premisse
+           \ifmpr@premise
              \setbox \mpr@hlist
                 \hbox {\unhbox0 \hskip \mpr@sep \unhbox \mpr@hlist}%
            \else
@@ -394,8 +399,18 @@
 
 %%%%%%%%%%%%%%%%
 %% BEGIN PATCH
-%% Alternate solution for \mpr@hovboxT
-%% So as to compute premises in order
+
+%% Alternate solution for @hovbox so as to compute premises
+%% in order of appearance.
+
+\providecommand {\texbool}[1]
+    {#1\let \bln@do \@firstoftwo \else \let \bln@do \@secondoftwo \fi
+     \bln@do}
+\def \mpr@ifpremise {\texbool {\ifmpr@premise}}
+\newcommand {\assert}[2][]
+   {\texbool{#2}{}{\PackageError {mathpartir}{#1}{\FATAL}}}
+\newcommand {\avoid}[2][]
+   {\texbool{#2}{\PackageError {mathpartir}{#1}{\FATAL}}{}}
 
 %% Do not change this
 \def \mpr@empty {}
@@ -409,86 +424,102 @@
 
 \newbox \mpr@tmpbox
 
+\def \mpr@vskip@optional
+  {\ifx \mpr@vskip \empty \else
+   \hrule height 0em depth \mpr@vskip width 0em\fi}
+
 %% Moving hlist to vlist (unless hlist is void)
-%% does not set box0
 \def \mpr@hontovlist
-  {\ifvoid \mpr@hlist \else
-     \ifmpr@center
-        \setbox \mpr@hlist
-          \hbox {\hskip -0.5\wd\mpr@hlist \unhbox\mpr@hlist}\fi
-     \setbox \mpr@vlist \vbox {\box\mpr@hlist \unvbox\mpr@vlist}%
-     \texbool{\ifvoid\mpr@hlist}{}{\ERROR}%
+  {\ifvoid \mpr@hlist
+   \else
+     \setbox \mpr@vlist \vbox 
+         {\hbox {\ifmpr@center \hskip -0.5\wd\mpr@hlist \fi
+                 \unhbox\mpr@hlist}%
+          \mpr@vskip@optional
+          \unvbox\mpr@vlist}%
+     \setbox \mpr@hlist \box\voidb@x
   \fi}
 
-\providecommand {\texbool}[1]
-    {#1\let \bln@do \@firstoftwo \else \let \bln@do \@secondoftwo \fi
-     \bln@do}
-
-\def \mpr@move@htovlist{%
+\def \mpr@rev@htovlist {%
   %% Pop \mpr@hlist into \mpr@vlist
-  %% Uses box0 and box1 as intermediate boxes
-  %% Usese box0 globally
-  %% Warning! global setting 
-  \texbool {\ifvoid \mpr@hlist}{\ERROR}{%
+  %% Warning! global setting of \box0.
+  \assert{\ifmpr@premise}%
+  \avoid[@rev@htovlist@begin] {\ifvoid \mpr@hlist}%
   \setbox0 \box\mpr@hlist
   \setbox \mpr@hlist \hbox
     {\unhbox0
-     \setbox \mpr@hlist\lastbox
-     \mpr@tmpdim \wd\mpr@hlist
+     \setbox \mpr@hlist\lastbox \mpr@tmpdim \wd\mpr@hlist
      \loop
        \setbox0 \lastbox
-       \texbool{\ifvoid0}{\iffalse}{%
-       \advance \mpr@tmpdim by \mpr@sep
-       \advance \mpr@tmpdim by \wd0\relax
-       \texbool{\ifdim \mpr@tmpdim > \hsize}
-         %% Move hlist onto vlist
-         {\mpr@hontovlist
-          %% Move box0 to hlist and adjust dim
-          \setbox \mpr@hlist \box0
-          \mpr@tmpdim \wd\mpr@hlist
-          }%
-         %% Move box0 to hlist and adjust dim
-         {\setbox \mpr@hlist
-             \hbox {\box0 \hskip \mpr@sep \unhbox\mpr@hlist}}%
-       \iftrue}%
+       \texbool{\ifvoid0}{\iffalse}{\mpr@tohlist \iftrue}%
      \repeat
      \ifvoid \mpr@hlist \else \mpr@hontovlist \fi
      \global \setbox0 \box\mpr@vlist
     }%
-  \setbox\mpr@vlist\box0
-  \texbool{\ifvoid\mpr@hlist}{\ERROR}{}%
-  }}
+  \setbox\mpr@vlist\box0\relax
+  \avoid[@rev@htovlist@end] {\ifvoid \mpr@hlist}%
+  }
+
+\def \mpr@hjoin #1#2{#1\hskip \mpr@sep #2}
+
+\def \mpr@tohlist{%
+  %% Pushes the hbox in \box0 into hlist
+  %% Discharge @hlist into @vlist if needed
+  %% \if@mprpremise drives the growing direction (T v.s. B).
+  %% Maintain the width of @hlist plus in @tmpdim
+  \avoid {\ifvoid0}%
+  %% FIXME
+  \mpr@tmpdim \wd\mpr@hlist
+  \assert[\the \mpr@tmpdim =/= \the\wd\mpr@hlist]
+      {\ifnum \mpr@tmpdim = \wd\mpr@hlist}%
+  \advance \mpr@tmpdim by \mpr@sep
+  \advance \mpr@tmpdim by \wd0
+  \texbool{\ifdim \mpr@tmpdim > \hsize}
+     {\mpr@hontovlist
+      \setbox \mpr@hlist \box0
+      \mpr@tmpdim \wd\mpr@hlist}%
+     {\ifvoid\mpr@hlist
+        \setbox \mpr@hlist \box0
+      \else 
+        \setbox \mpr@hlist \hbox {%
+        \mpr@ifpremise
+          {\mpr@hjoin {\box0}{\unhbox\mpr@hlist}}
+          {\mpr@hjoin {\unhbox\mpr@hlist}{\box0}}}}%
+  }
 
 \def \mpr@next #1{%
   \mpr@ifempty{#1}
-    {\mpr@move@htovlist \unvbox\mpr@vlist}%
-    {\setbox1 \mpr@ibox {#1}%
-     \setbox \mpr@hlist \hbox {\unhbox\mpr@hlist \box1}}%
-  }
+    {\mpr@ifpremise {\mpr@rev@htovlist}{\mpr@hontovlist}%
+     \unvbox\mpr@vlist}%
+    {\setbox0 \mpr@ibox {#1}%
+     \ifmpr@premise
+        \setbox \mpr@hlist \hbox {\unhbox\mpr@hlist \box0}%
+     \else \mpr@tohlist \fi
+    }}
 
-\def \mpr@hovboxes #1{\hbox {%
-  \setbox \mpr@vlist \vbox {%
-    \@premissetrue
+\def \mpr@hovbox@new #1#2{\hbox {%
+  %% A boolean \mpr@premise... to signal T or B direction
+  #1\relax
+  \setbox \mpr@vlist \mpr@vbox {%
     \let \\ \relax
     \let \snoc \relax
-    \expandafter \mpr@makelist #1\mpr@to \@tmp
     \setbox \mpr@hlist \box\voidb@x
     \setbox \mpr@vlist \box\voidb@x
-    \let\\\mpr@next
-    \@tmp\relax
-    \mpr@move@htovlist
+    \expandafter \mpr@makelist #2\mpr@to \@tmp
+    \let\\\mpr@next \@tmp\relax
+    \mpr@ifpremise {\mpr@rev@htovlist}{\mpr@hontovlist}%
     \hbox {\box\mpr@vlist}%
   }%
-  \ifmpr@center \hskip \wd\mpr@vlist\fi
-  \box \mpr@vlist
+  \ifmpr@center \hskip \wd\mpr@vlist\fi \box \mpr@vlist
   }}
 
-\let \mpr@hovboxT \mpr@hovboxes
+\let \mpr@hovbox\mpr@hovbox@new
 
 %% You may recover the old behavior by calling
 %% \MprRecoverOlderVersion
 \def \MprRecoverOlderVersion
-   {\def \mpr@hovboxT {\mpr@hovbox{\@premissetrue}}}
+   {\let \mpr@hovbox \mpr@hovbox@old}
+
 %% END PATCH
 %%%%%%%%%%%%%%%%
 
@@ -667,21 +698,18 @@
 \newif \ifmpr@vcenter \mpr@vcenterfalse
 \newcommand \mpr@inferstar@ [3][]{\begingroup
   \setbox0 \hbox
-        {\let \mpr@rulename \mpr@empty
-         \let \mpr@vdots \mpr@empty
-         \setbox \mpr@right \box\voidb@x%\hbox{}%
-         \setkeys{mpr}{#1}%
-         $\ifx \mpr@rulename \mpr@empty
-          \ifx \mpr@vdots \mpr@empty
-            \mpr@inferrule {#2}{#3}\else
-            \mpr@inferrule {#2}{#3\\\\\mpr@vdots}\fi%
-          \else
-          \ifx \mpr@vdots \mpr@empty
-            \mpr@inferrule [{\mpr@rulename}]{#2}{#3!}\else
-            \mpr@inferrule [{\mpr@rulename}]{#2}{#3?\\\\\mpr@empty}\fi%
-          \fi
-          \box \mpr@right$%
-          \ifmpr@vcenter \aftergroup \mpr@vcentertrue \fi}
+     {\let \mpr@rulename \mpr@empty
+      \let \mpr@vdots \mpr@empty
+      \setbox \mpr@right \box\voidb@x%\hbox{}%
+      \setkeys{mpr}{#1}%
+      \texbool{\ifx \mpr@rulename \mpr@empty}
+         {\let \mpr@call \mpr@inferrule}
+         {\def \mpr@call {\mpr@inferrule [{\mpr@rulename}]}}%
+      $\texbool{\ifx \mpr@vdots \mpr@empty}
+         {\mpr@call {#2}{#3}}
+         {\mpr@call {#2}{#3\\ \mpr@vdots}}%
+       \box \mpr@right$%
+      \ifmpr@vcenter \aftergroup \mpr@vcentertrue \fi}
   \ifmpr@vcenter
      \box0
   \else
