@@ -81,7 +81,7 @@
 \def \mpr@line@hva #1{\mpr@break@display}
 \def \mpr@break@display
 {\sbox{\mpr@save@arg}{\mpr@line@arg}%
-\endmpr@line\mpr@line{\usebox{\mpr@save@arg}}}
+\endmpr@line@nolab\mpr@line{\usebox{\mpr@save@arg}}}
 %%% this may not be robust (if nextchar is special char)
 %%% also may not want this semantics
 \def \@latexcr #1{\def \@testa {#1}%
@@ -100,9 +100,10 @@
 \def\\{\@latexcr}\def\and{\@latexcr{\qquad}}%
 \let \hva \mpr@infer@hva
 }
+\newcommand{\endmpr@line@nolab}{\@close{display}\egroup\@force{td}\@close{tr}}
 \newcommand{\endmpr@line}
 {\@close{display}\egroup\@force{td}%
-\ifx\mpr@label\mpr@R\@open{td}{}~\mpr@name{\@rule@name}\@force{td}\fi
+\ifx\mpr@label\mpr@R\@open{td}{style="valign:bottom"}~\mpr@name{\@rule@name}\@force{td}\fi
 \@close{tr}}
 \def \mpr@empty {}
 \newif \ifmpr@center \mpr@centertrue
