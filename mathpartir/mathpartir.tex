@@ -25,7 +25,7 @@
 
 \documentclass {article}
 
-\usepackage {mathpartir}
+\usepackage {minepartir}
 \usepackage {listings}
 \usepackage {array}
 \usepackage {url}
@@ -265,18 +265,17 @@ $}
 \\
 \end{tabular}
 $$
-
 The macro \lst"\inferrule" accepts a label as optional argument, which will
 be typeset on the top left corner of the rule:
 \par
 \begin{tabular}{m{0.54\hsize}m{0.3\hsize}}
 \begin{lstlisting}{Ocaml}
-\inferrule [yop]
-   {aa \\ bb}
-   {cc}
+\inferrule [Yop]
+   {aa \\ bbc \\ cc}
+   {dd}
 \end{lstlisting}
 &
-$\inferrule [Yop]{aa \\ bb}{cc}$
+$\inferrule [Yop] {aa \\ bbc \\ cc} {dd}$
 \\
 \end{tabular}
 \par\noindent
@@ -287,12 +286,12 @@ centered:
 \begin{tabular}{m{0.54\hsize}m{0.3\hsize}}
 \begin{lstlisting}{Ocaml}
 \inferrule
-   {aa \\ bb}
+   {aa \\\\ bbc \\ cc}
    {cc}
-\quad (\textsc {Yop})
+\quad(\textsc {Yop})
 \end{lstlisting}
 &
-$\inferrule{aa \\ bb}{cc} \quad (\textsc {Yop})$
+$\inferrule {aa \\\\ bbc \\ cc}{cc} \quad (\textsc {Yop})$
 \\
 \end{tabular}
 
@@ -837,11 +836,13 @@ for full examples.
 The package also redefines \verb"\hva" to do nothing in \LaTeX mode in
 both \lst"mathpar" environment nor in inference rules
 
-In \hevea mode, \verb"\and" will always produce a vertical break in mathpar
-environment; to obtain a horizontal break, use \verb"\hva \and" instead.
-
-Conversely, \verb"\\" will always produce a horizontal break in type
-inference rules; to obtain a vertical break, use \verb"\hva \\" instead.
+In \hevea mode and \verb"mathpar" environment, \verb"\and" will always
+produce a vertical break in mathpar environment; to obtain a horizontal
+break, use \verb"\hva \and" instead.
+In \hevea mode inference rules, \verb"\\" and \verb"\\\\"
+will behaves as in tex.  In addition you may write \verb"\hva\\\\" to
+produce the behavior \verb"\\" and \verb"\\\hva" to produce the behavior of
+\verb"\\\\".
 
 For instance, by default the following code,
 \begin{lstlisting}{Ocaml}
@@ -864,7 +865,7 @@ which typesets in {\TeX} as follows,
 \inferrule* [Left=Foo]
    {\inferrule* [Right=Bar,width=8em,
                  leftskip=2em,rightskip=2em,vdots=1.5em]
-      {a \\ a \\ bb \\ cc \\ dd}
+      {a \\ a \\\hva bb \\ cc \\ dd}
       {ee}
     \\ ff \\ gg}
    {hh}
@@ -888,7 +889,7 @@ To obtain (almost) the same rendering as in {\TeX}, it could be typed as
       \inferrule* [Left=Foo]
       {\inferrule* [Right=Bar,width=8em,
                     leftskip=2em,rightskip=2em,vdots=1.5em]
-         {a \\ a \hva \\ bb \\ cc \\ dd}
+         {a \\ a \\\hva bb \\ cc \\ dd}
          {ee}
          \\ ff \\ gg}
       {hh}
