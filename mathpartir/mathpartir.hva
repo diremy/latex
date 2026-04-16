@@ -39,7 +39,7 @@
 \newstyle{.mpcell}{
   display: inline-block;
   width: auto;
-  vertical-align: middle;
+  vertical-align: bottom;
   margin: 10px;
   border-radius: 10px;
 }
@@ -50,14 +50,10 @@
   flex-vasis: auto;
   flex-wrap: wrap;
   align-items: center;
+  baseline-position: last baseline;
   justify-content: space-around;
   width: 100%;
  }
-
-\newcommand{\mpr@andskip}{2em}
-\newstyle {.mpskip}{
-  width: \mpr@andskip;
-  }
 
 \setenvclass{mathpar}{mathpar}
 \setenvclass{mprow}{mprow}
@@ -80,7 +76,7 @@
   {\@open{div}{style="width:\hva@cellskip"}\@print{&nbsp;}\@close{div}}
   %% {\@open{div}{\envclass@attr{mpskip}}\@print{&nbsp;}\@close{div}}
 \def\mathpar@hspace
-  {\push@styles\close@mpcell \mathpar@andskip \open@mpcell\pop@styles}
+  {\mathpar@andskip \push@styles\close@mpcell \open@mpcell\pop@styles}
 
 \def\mathpar@vspace
 {\push@styles\close@mpcell\close@mprow \open@mprow\open@mpcell\pop@styles}

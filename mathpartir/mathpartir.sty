@@ -208,11 +208,10 @@
 \def \mpr@shortbindings {%
   \let \and \mpr@shortandcr
   \let \par \mpr@shortandcr
-  \let \\\mpr@shortcr
+  \let \\   \mpr@shortcr
   \let \eqno \mpr@shorteqno
   \let \hva \mpr@hva
   }
-
 
 \newenvironment{mathpar}[1][]
   {\ifmathparallowpagebreaks
@@ -234,10 +233,13 @@
          \mpr@firstlinetrue \mpr@dim \z@ \mpr@count 0
          \noindent \setbox0 \hbox \bgroup $\displaystyle
      \else
-         \MathparBindings
          %% should we keep the ifmmode case, which has no counter
-         %% part in shortmathpar?
+         %% part in shortmathpar? This allows mathpar to be used for
+         %% typesetting formulas in normal text style by passing $ as
+         %% optional argument  #1
          \ifmmode $\else \noindent $\displaystyle\fi %$
+         %% Strangely, \par cannot be \let above the previous line
+         \MathparBindings
      \fi
      \fi}
   {\MathparEndhook \unskip
@@ -260,6 +262,17 @@
    \egroup
    $$\ignorespacesafterend %$
   }
+
+%% Simpler version with LaTeX-style code
+
+%% \newenvironment{mathpar}[1][] % Argument ignored
+%%        {\[\parskip 0em
+%%           %% \hsize \linewidth
+%%           \begin{minipage}{\linewidth}\centering
+%%           \mpr@prebindings \mpr@paroptions
+%%           \(\displaystyle \MathparBindings}
+%%        {\unskip \)\end{minipage}\]\ignorespacesafterend}
+
 
 %%% HOV BOXES
 
@@ -746,8 +759,8 @@
 \def \LeftTirNameStyle #1{\TirNameStyle {#1}}
 \def \RightTirNameStyle #1{\TirNameStyle {#1}}
 
-\def \lefttir@name #1{\hbox {\small \LeftTirNameStyle{#1}}}
-\def \righttir@name #1{\hbox {\small \RightTirNameStyle{#1}}}
+\def \lefttir@name #1{\hbox {\LabTirSize \LeftTirNameStyle{#1}}}
+\def \righttir@name #1{\hbox {\LabTirSize \RightTirNameStyle{#1}}}
 \let \TirName \lefttir@name
 \let \LeftTirName \lefttir@name
 \let \DefTirName \lefttir@name

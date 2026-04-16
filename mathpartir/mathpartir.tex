@@ -144,17 +144,26 @@ two
 
 three
 \\
-four
+or
 
-five
+more
+
+rules
 \end{mathpar}
 This is to be compared with
+%%\HEVEA \renewcommand{\hva@cellskip}{10em}
 \begin{mathpar}
 one
 
 two
 
 three
+
+or
+
+more
+
+very-large-rules
 \end{mathpar}
 which would overlap with the previous line.
 This behavior is automatic.
@@ -441,9 +450,13 @@ $$\def\R{\inferrule {aa\\aa\\\\bbb\\bbb} {cc}
   \hspace{3em}}
   \R  \mprset{vskip=0ex}\R  \mprset{vskip=1ex}\R$$
 \end{lstlisting}
-$$\def \R{\inferrule {aa \\ aa  \\\\ bbb \\ bbb} {cc}\hspace{3em}}
-  \R  \mprset{vskip={}}
-  \R  \mprset{vskip=0ex}\R  \mprset{vskip=1ex}\R$$
+\begin{mathpar}
+\def \R{\inferrule {aa \\ aa  \\\\ bbb \\ bbb} {cc}\hspace{3em}}
+  \R\par
+  \mprset{vskip={}}\R\par
+  \mprset{vskip=0ex}\R\par
+  \mprset{vskip=1ex}\R
+\end{mathpar}
 \end{quote}
 
 
