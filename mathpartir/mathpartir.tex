@@ -28,6 +28,7 @@
 \usepackage {mathpartir}
 \usepackage {listings}
 \usepackage {array}
+\usepackage {xspace}
 \usepackage {url}
 \newif \ifhevea
 %HEVEA \heveatrue
@@ -39,6 +40,7 @@
 \def \hevea {H\L{E}\R{V}\L{E}A}
 \def \hevea {$\mbox {H}\!_{\mbox {E}}\!\mbox {V}\!_{\mbox {E}}\!\mbox {A}$}
 \def \hemph #1{\begingroup \color{blue}#1\endcolor}
+\def \macro #1{\texttt{\string #1}\xspace}
 
 \lstset {basicstyle=\tt}
 \let \lst \verb
@@ -64,7 +66,7 @@
 This package provides macros for displaying lists of formulas that are
 typeset in mixed horizontal and vertical modes. The package is two-folded.
 
-The first part is an environment \verb"mathpar" that generalizes the math
+The first part is an environment \texttt{mathpar} that generalizes the math
 display mode to allow several formulas on the same line, and several lines
 in the same display. The arrangement of the sequence of formulas into lines
 is automatic depending on the line width and on a minimum inter-formula
@@ -78,7 +80,7 @@ width is not fixed in advance; and the inference rule should use no more
 width than necessary so that other inference rules are given a chance to
 appear on the same line.
 
-Although \verb"mathpar" and \verb"inferrule" look similar in their
+Although \texttt{mathpar} and \texttt{inferrule} look similar in their
 specification, and are often used in combination, they are in fact
 completely different in their implementations.
 \end{abstract}
@@ -122,60 +124,55 @@ The-Last-One
 \end{mathpar}
 \end{tabular}
 $$
-Formulas are separated by \verb"\and" (or equivalently by a blank line).
-To enforce a vertical break it suffices to replace \verb"\and" by
+Formulas are separated by \macro\and (or equivalently by a blank line).
+To enforce a vertical break it suffices to replace \macro\and by
 \verb"\\".
 
-The implementation of \verb"mathpar" entirely relies on the paragraph mode
+The implementation of \texttt{mathpar} entirely relies on the paragraph mode
 for text. It starts  a new paragraph, and a math formula within a paragraph,
 after adjusting the spacing and penalties for breaks. Then, it simply binds
-\verb"\and" to something like \verb"\goodbreak".
+\macro\and to something like \macro\goodbreak.
 
-Since \texttt{version 1.5.0}, the environment \verb"mathpar"
+Since \texttt{version 1.5.0}, the environment \texttt{mathpar}
 reduces the vertical skip using \TeX\ variable
-\verb"\abovedisplayshortskip" instead of \verb"\abovedisplayskip"
+\macro\abovedisplayshortskip instead of \macro\abovedisplayskip
 when the first line of the display is short enough not to overlap with the
-last line before the
-display:
+last line before the display. For instance, when this is activated, you may
+compare this short line:
+\shortmathpartrue
 \begin{mathpar}
 one
 
 two
-
-three
-\\
-or
-
-more
-
-rules
 \end{mathpar}
-This is to be compared with
+preceding the display, with this much longer last line: 
+\begin{mathpar}
+one
+
+two
+\end{mathpar}
+%% $$
+%% \hbox to \linewidth {\hfil foo \hfil \two}
+%% $$
+This behavior can be set automatically with the package option
+\texttt{shortdisplay}, which is currently not set by default.
+It can be locally activated (resp. deactivated) with boolean
+\macro \shortmathparfalse (resp. \macro \shortmathpartrue). 
+When the option is deactivated a short display following a short line would
+be displayed\linebreak as: 
 %%\HEVEA \renewcommand{\hva@cellskip}{10em}
+\shortmathparfalse %\shortmathpartrue
 \begin{mathpar}
 one
 
 two
-
-three
-
-or
-
-more
-
-very-large-rules
 \end{mathpar}
-which would overlap with the previous line.
-This behavior is automatic.
-Currently, it can be canceled with
-\verb"\shortmathparfalse", in case of a problem with the new behavior.
-However, there should be no reason to do so and this options may be removed
-in the future.
+with a full \macro\displayskip instead of a
+\macro\shortdisplayskip amount. 
 
-An alternative environment \texttt{mathparpagebreakable} allows for page
-breaks in the middle of the display.  This cancels the previous optimisation
-for short displays.
-
+An alternative environment \texttt{mathparpagebreakable} may also be used to
+allow for page breaks in the middle of the display.  This however cancels the
+previous optimization for short displays.
 
 \section {The inferrule macro}
 
@@ -529,7 +526,7 @@ $
 $$
 The star version can also take an optional argument,
 but with a different semantics. The optional argument is parsed by the
-\verb"keyval" package, so as to offer a set of record-like options:
+\texttt{keyval} package, so as to offer a set of record-like options:
 $$
 \def \arraystretch {1.4}
 \begin{tabular}{|>{\tt}c|>{$}c<{$}|p{0.6\hsize}|}
@@ -541,7 +538,7 @@ before & tex & Execute $tex$ before typesetting the rule.
 \\\hline
 width & d &  Set the width of the rule to $d$
 \\\hline
-narrower & d & Set the width of the rule to $d$ times \verb"\hsize".
+narrower & d & Set the width of the rule to $d$ times \macro\hsize.
 \\\hline
 lab & \ell & Put label $\ell$ on  the top of the rule as with the
 non-start version.
@@ -554,7 +551,7 @@ Left & \ell & Idem, but as if label $\ell$ had zero width.
 \\\hline
 Right & \ell & As \verb"Left", but on  the right of the rule.
 \\\hline
-right & \ell & As \verb"left",  but on the right of the rule.
+right & \ell & As \texttt{left},  but on the right of the rule.
 \\\hline
 leftskip & d & Cheat by (skip negative space) $d$ on the left side.
 \\\hline
@@ -642,7 +639,7 @@ This can safely be redefined by the user.
 occurrences ({\em i.e.} in rule \lst"\inferrule") while the three other forms
 are used for referencing names ({\em i.e.} in the star-version).  The styles
 can also be redefined using labeled-arguments of the star-version of
-{\tt\string\inferrule} as described in table below.
+\macro\inferrule as described in table below.
 
 Instead of just changing the style, the whole
 typesetting of labels may be changed by redefining the commands
@@ -652,9 +649,9 @@ typesetting of labels may be changed by redefining the commands
 and \verb"\RightTirName", each of which receives the label to be typeset as
 argument.
 
-Notice, that if the package \verb"hyperref" is loader, one can automatically
-attach hypertarget to rule definitions names of rules defined with the
-non-star version of \verb"\inferrule" and refers to them by
+Notice, that if the package \texttt{hyperref} is loaded, one can automatically
+attach hypertargets to rule definitions names of rules defined with the
+non-star version of \macro\inferrule and refers to them by
 \verb"\RefTirName" defined as follows:
 \begin{verbatim}
 \renewcommand{\DefTirName}[1]{\hypertarget{#1}{\TirName {#1}}}
@@ -679,11 +676,11 @@ rightstyle & tex& idem for right  labels
 
 \subsection {Star \emph{v.s.} non-star version}
 
-The package also defines \verb"\infer" as a shortcut for \verb"\inferrule"
+The package also defines \macro\infer as a shortcut for \macro\inferrule
 but only if it is not previously defined.
 
 There are two differences between the plain and star versions of
-\verb"\inferrule".
+\macro\inferrule.
 The plain version centers the rule on the fraction line, while the
 star one centers the rule on the last conclusion, so as to be used in
 derivation trees.
@@ -734,7 +731,7 @@ Or differently,
 
 \subsection{Triple rules}
 
-There is also a version \texttt{\string\triplerule} originally design to print
+There is also a version \macro\triplerule originally design to print
 Hoare triples as rules, which will be rendered as follows, horizontally
 aligning rules at their bottom horizontal rule line.
 \begin{mathpar}
@@ -758,7 +755,7 @@ aligning rules at their bottom horizontal rule line.
 }
 \end{mathpar}
 The first rule typeset as follows (in an environment where
-\texttt{\string\hsize} is 8em to folow its typesetting on several lines).
+\macro\hsize is 8em to folow its typesetting on several lines).
 \begin{lstlisting}{Ocaml}
 \triplerule[Hoare]
     {ppppp \\  pppp \\ pppp}
@@ -785,10 +782,10 @@ explaned in section \S\ref {sec/braces}.
 
 The main macro in the implementation of inference rules is the one that
 either premises and conclusions.  The macros uses two box-registers one
-\verb"hbox" for typesetting each line and one \verb"vbox" for collecting
+\texttt{hbox} for typesetting each line and one \texttt{vbox} for collecting
 lines. The premise appears as a list with
 \verb"\\" as separator. Each element is considered in turn typeset in a
-\verb"hbox" in display math mode. Its width is compare to the space left on
+\texttt{hbox} in display math mode. Its width is compare to the space left on
 the current line. If the box would not fit, the current horizontal line is
 transferred to the vertical box and emptied. Then, the current formula can
 safely be added to the horizontal line (if it does not fit, nothing can be
@@ -828,15 +825,15 @@ produces:
 \setcounter{clab}{0}\foo{Old}
 \end{mathpar}
 
-\section {Other Options for the {\tt mathpar} environment}
+\section {Other options for the {\tt mathpar} environment}
 
-The vertical space in \verb"mathpar" is adjusted by
+The vertical space in \texttt{mathpar} is adjusted by
 \verb"\MathparLineskip". To restore the normal paragraph parameters in mathpar
 mode (for instance for some inner paragraph), use the command
 \verb"\MathparNormalpar".
-The environment uses \verb"\MathparBindings" to
-rebind \verb"\\", \verb"and", and \verb"\par". You can redefine thus command
-to change the default bindings or add your own.
+The environment uses \verb"\MathparBindings" to rebind \verb"\\",
+\macro \and, and \texttt{\char`\\par}. You can redefine thus command to
+change the default bindings or add your own.
 
 
 \section {Examples}
@@ -846,10 +843,10 @@ for full examples.
 
 \section {{\hevea} compatibility}
 
-The package also redefines \verb"\hva" to do nothing in \LaTeX mode in
+The package also redefines \macro\hva to do nothing in \LaTeX mode in
 both \lst"mathpar" environment nor in inference rules
 
-In \hevea mode and \verb"mathpar" environment, \verb"\and" will always
+In \hevea mode and \texttt{mathpar} environment, \macro\and will always
 produce a vertical break in mathpar environment; to obtain a horizontal
 break, use \verb"\hva \and" instead.
 In \hevea mode inference rules, \verb"\\" and \verb"\\\\"
@@ -976,13 +973,39 @@ $$
 \inferrule*[style=\texttt,lab=Def] A B
 $$
 
+\section {Testing for short display}
+
+\shortmathpartrue%\shortmathparfalse
+
+\noindent Short:
+\begin{mathpar}
+aaa
+
+aaa
+
+aaa
+\end{mathpar}
+
+\shortmathparfalse
+\noindent Short:
+\begin{mathpar}
+aaa
+
+aaa
+
+bbb
+
+ccc
+\end{mathpar}
+
 \endinput
 
 
-%% LocalWords: mathpar aa Yop bb dd ee ff cc Ocaml Foo leftskip
-%% LocalWords: rightskip vdots gg hh uu vv ww
-%% LocalWords: HeVeA escapechar inferrule yop flushleft bbb
+%% LocalWords: mathpar aa Yop bb dd ee ff cc Ocaml Foo leftskip centerline
+%% LocalWords: rightskip vdots gg hh uu vv ww INRIA Didier shortdisplay bbc
+%% LocalWords: HeVeA escapechar inferrule yop flushleft bbb minipage
 %% LocalWords: ccc dddd fractionaboveskip fractionbelowskip myfraction
 %% LocalWords: sep vskip Tabulars minipages keyval arg tex lmr vcenter
 %% LocalWords: rightstyle uncapitablized leftstyle parameterized Pos aaa
-%% LocalWords: hbox vbox mathpartir
+%% LocalWords: hbox vbox mathpartir mathparpagebreakable uncapitalized
+% LocalWords:  hyperref

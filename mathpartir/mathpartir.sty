@@ -8,7 +8,7 @@
 %%
 %% This is a generated file.
 %%
-%% Copyright (C) 2001, 2002, 2003, 2005, 2015, 2020, 2022, 2024
+%% Copyright (C) 2001--2003, 2005, 2015, 2020, 2022, 2024, 2026
 %% by Didier Remy <didier.remy(at)inria(dot)fr>
 %%
 %% This file is part of mathpartir.
@@ -29,7 +29,7 @@
 
 \NeedsTeXFormat{LaTeX2e}
 \ProvidesPackage{mathpartir}
-    [2024/01/25 version 1.5.3 Math Paragraph for Typesetting Inference Rules]
+    [2026/04/15 version 1.6.0 Math Paragraph for Typesetting Inference Rules]
 
 %% Identification
 %% Preliminary declarations
@@ -50,8 +50,8 @@
 %% found with the implementation.
 %% This option may/should be removed or inverted in the future.
 
-\newif \ifshortmathpar \shortmathparfalse
-\DeclareOption {shordisplay}{\shortdisplaytrue}
+\newif \ifshortmathpar \shortmathparfalse %\shortmathpartrue
+\DeclareOption {shortdisplay}{\shortmathpartrue}
 
 \ProcessOptions
 
@@ -92,11 +92,11 @@
 \def \mpr@eqno #1{\mpr@andcr #1\hskip 0em plus -1fil \penalty 10}
 
 \def \mpr@bindings {%
-  \let \and \mpr@andcr
-  \let \par \mpr@andcr
-  \let \\\mpr@cr
+  \let \and  \mpr@andcr
+  \let \par  \mpr@andcr
+  \let \\    \mpr@cr
   \let \eqno \mpr@eqno
-  \let \hva \mpr@hva
+  \let \hva  \mpr@hva
   }
 
 \def \MathparBindings {\mpr@bindings}
@@ -194,25 +194,30 @@
       \advance \mpr@count by 1
    \fi}
 
-\def \mpr@short #1%
+\def \mpr@shortbegin%
   {$\egroup
    \mpr@checkdisplay
-   \box0 #1%
-   \setbox0\hbox \bgroup $\displaystyle}
-\def \mpr@shortandcr {\mpr@short{\penalty 50\mpr@and}}
+   \box0}
+\def \mpr@shortend
+   {\setbox0\hbox \bgroup $\displaystyle \mpr@short@parbinding}
+\def \mpr@shortandcr {\mpr@shortbegin \penalty 50\mpr@and\mpr@shortend}
 \def \mpr@shortcr
-   {\mpr@short{\penalty -10000\mpr@and \mpr@cutline}}
+   {\mpr@shortbegin \penalty -10000\mpr@and \mpr@cutline \mpr@shortend}
 \def \mpr@shorteqno #1{%
-   \mpr@short {\penalty 50\mpr@and #1\hskip 0em plus -1fil\penalty 10}}
+   \mpr@shortbegin \penalty 50\mpr@and #1\hskip 0em plus -1fil\penalty 10
+   \mpr@shortend}
 
-\def \mpr@shortbindings {%
-  \let \and \mpr@shortandcr
-  \let \par \mpr@shortandcr
-  \let \\   \mpr@shortcr
+\def \mpr@short@bindings {%
+  \let \and  \mpr@shortandcr
   \let \eqno \mpr@shorteqno
-  \let \hva \mpr@hva
+  \let \hva  \mpr@hva
+  \let \\    \mpr@shortcr
   }
-
+%% The following binding with textlive 2026 if set outside of the
+%% math display. Hence, it need to be reset after every begin-$
+\def \mpr@short@parbinding {%
+  \let \par  \mpr@shortandcr
+}
 \newenvironment{mathpar}[1][]
   {\ifmathparallowpagebreaks
        \mathparpagebrakeable
@@ -227,11 +232,12 @@
      \parskip 0em \hsize \linewidth \MathparCentering
      \vbox \bgroup \noindent \mpr@prebindings \mpr@paroptions #1\relax
      \ifshortmathpar
-         \mpr@shortbindings
-         \let \mpr@bindings \mpr@shortbindings
-         \MathparBindings
+         \let \mpr@bindings \mpr@short@bindings
          \mpr@firstlinetrue \mpr@dim \z@ \mpr@count 0
-         \noindent \setbox0 \hbox \bgroup $\displaystyle
+         \MathparBindings
+         \noindent \setbox0 \hbox \bgroup
+         $\displaystyle
+         \mpr@short@parbinding
      \else
          %% should we keep the ifmmode case, which has no counter
          %% part in shortmathpar? This allows mathpar to be used for
@@ -239,7 +245,7 @@
          %% optional argument  #1
          \ifmmode $\else \noindent $\displaystyle\fi %$
          %% Strangely, \par cannot be \let above the previous line
-         \MathparBindings
+         \MathparBindings 
      \fi
      \fi}
   {\MathparEndhook \unskip
@@ -248,7 +254,8 @@
        \mpr@checkdisplay
        \advance \mpr@dim by -\mpr@andskip
        \advance \mpr@count by -1
-       \advance \mpr@dim by \wd0 \box0
+       \advance \mpr@dim by \wd0
+       \box0
        \mpr@dim@adjust
        \ifdim \mpr@dim > \predisplaysize
              \ifmpr@firstline
@@ -259,7 +266,7 @@
    \else
       \ifmmode $\fi
    \fi
-   \egroup
+   \egroup %of \vbox
    $$\ignorespacesafterend %$
   }
 
